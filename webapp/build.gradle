@@ -1,0 +1,36 @@
+sourceCompatibility = 1.8
+version = '1.0'
+
+buildscript {
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.2.2.RELEASE")
+    }
+
+}
+
+apply plugin: 'spring-boot'
+
+jar {
+    baseName = 'webapp'
+    version =  '1.0'
+}
+
+configurations {
+    compile.exclude module: 'spring-boot-starter-logging'
+}
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web") {
+        exclude module: 'spring-boot-starter-logging'
+    }
+    compile("org.springframework.boot:spring-boot-starter-actuator") {
+        exclude module: "spring-boot-starter-logging"
+    }
+    compile("org.springframework.boot:spring-boot-starter-log4j")
+    compile("org.springframework:spring-jms")
+    compile("org.apache.activemq:activemq-broker")
+}
