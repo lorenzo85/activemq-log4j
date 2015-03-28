@@ -2,3 +2,5 @@
 *.ipr
 **/build
 **/.idea
+.gradle
+**/gradle
