@@ -1,15 +1,14 @@
 package org.camel.logger;
 
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
-import org.apache.camel.builder.RouteBuilder;
+import org.apache.activemq.camel.component.ActiveMQComponent;
+import org.apache.activemq.camel.component.ActiveMQConfiguration;
+import org.apache.camel.CamelContext;
 import org.apache.camel.main.Main;
-
-import java.util.Date;
+import org.apache.log4j.Logger;
 
 public class LogsConsumer {
 
-    private Main main;
+    static Logger LOG = Logger.getLogger(LogsConsumer.class);
 
     public static void main(String[] args) throws Exception {
         LogsConsumer consumer = new LogsConsumer();
@@ -17,32 +16,22 @@ public class LogsConsumer {
     }
 
     public void boot() throws Exception {
-        main = new Main();
+        Main main = new Main();
         main.enableHangupSupport();
         main.bind("foo", new MyBean());
         main.addRouteBuilder(new MyRouteBuilder());
+        CamelContext context = main.getOrCreateCamelContext();
+        context.addComponent("activemq", activeMQComponentFactory());
 
-        // Run until terminate JVM
-        System.out.println("Starting camel. Use ctrl + c to terminate JVM");
+        LOG.info("Starting camel. Use ctrl + c to terminate JVM");
         main.run();
     }
 
-    private static class MyRouteBuilder extends RouteBuilder {
-        @Override
-        public void configure() {
-            from("timer:foo?delay=2000")
-                    .process(new Processor() {
-                        @Override
-                        public void process(Exchange exchange) throws Exception {
-                            System.out.println("Invoked timer at " + new Date());
-                        }
-                    }).beanRef("foo");
-        }
-    }
-
-    static class MyBean {
-        public void callMe() {
-            System.out.println("MyBean.callMe method has been called.");
-        }
+    private ActiveMQComponent activeMQComponentFactory() {
+        ActiveMQConfiguration activeMQConfiguration = new ActiveMQConfiguration();
+        activeMQConfiguration.setBrokerURL("tcp://localhost:61616");
+        activeMQConfiguration.setUserName("admin");
+        activeMQConfiguration.setPassword("admin");
+        return new ActiveMQComponent(activeMQConfiguration);
     }
 }
