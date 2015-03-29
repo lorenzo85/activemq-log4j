@@ -26,7 +26,7 @@ public class LogsRoute extends RouteBuilder {
                     Map<String, Object> map = new HashMap<>();
                     map.put("message", log.getMessage());
                     map.put("level", log.getLevel().toString());
-                    map.put("logger", log.getLogger().getName());
+                    map.put("logger", log.getLoggerName());
                     exchange.getIn().setBody(map);
                 })
                 .to(format("sql:insert into log (message, level, logger) values (:#message, :#level, :#logger)?dataSource=%s", dataSourceName));
