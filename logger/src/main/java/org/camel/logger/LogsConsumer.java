@@ -1,37 +1,37 @@
 package org.camel.logger;
 
-import org.apache.activemq.camel.component.ActiveMQComponent;
-import org.apache.activemq.camel.component.ActiveMQConfiguration;
-import org.apache.camel.CamelContext;
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 import org.apache.camel.main.Main;
-import org.apache.log4j.Logger;
+
+import javax.sql.DataSource;
+
+import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
 
 public class LogsConsumer {
 
-    static Logger LOG = Logger.getLogger(LogsConsumer.class);
+    private static final String ACTIVEMQ = "activemq";
+    private static final String DATA_SOURCE_REF = "dataSource";
 
     public static void main(String[] args) throws Exception {
+        AppProperties properties = new AppProperties();
         LogsConsumer consumer = new LogsConsumer();
-        consumer.boot();
+        consumer.boot(properties);
     }
 
-    public void boot() throws Exception {
+    public void boot(AppProperties properties) throws Exception {
         Main main = new Main();
+        main.bind(DATA_SOURCE_REF, dataSource(properties));
+        main.bind(ACTIVEMQ, activeMQComponent(properties.getBrokerUrl()));
+        main.addRouteBuilder(new LogsRoute(properties.getBrokerTopic(), DATA_SOURCE_REF));
         main.enableHangupSupport();
-        main.bind("foo", new MyBean());
-        main.addRouteBuilder(new MyRouteBuilder());
-        CamelContext context = main.getOrCreateCamelContext();
-        context.addComponent("activemq", activeMQComponentFactory());
-
-        LOG.info("Starting camel. Use ctrl + c to terminate JVM");
         main.run();
     }
 
-    private ActiveMQComponent activeMQComponentFactory() {
-        ActiveMQConfiguration activeMQConfiguration = new ActiveMQConfiguration();
-        activeMQConfiguration.setBrokerURL("tcp://localhost:61616");
-        activeMQConfiguration.setUserName("admin");
-        activeMQConfiguration.setPassword("admin");
-        return new ActiveMQComponent(activeMQConfiguration);
+    private static DataSource dataSource(AppProperties properties) {
+        MysqlDataSource dataSource = new MysqlDataSource();
+        dataSource.setURL(properties.getDataSourceUrl());
+        dataSource.setUser(properties.getDataSourceUser());
+        dataSource.setPassword(properties.getDataSourcePassword());
+        return dataSource;
     }
 }
